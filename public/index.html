@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur de Salaire MVP</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #f4f7f9; 
+            color: #333; 
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+        }
+        h2 { 
+            color: #34495e; 
+        }
+        input { 
+            margin-bottom: 15px; 
+            padding: 10px; 
+            width: 100%; 
+            max-width: 300px; 
+            border: 1px solid #bdc3c7; 
+            border-radius: 4px; 
+        }
+        #outputs { 
+            margin-top: 30px; 
+            background-color: #fff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        #outputs p { 
+            margin: 10px 0; 
+            font-size: 1.1em; 
+        }
+        #outputs span { 
+            font-weight: bold; 
+            color: #27ae60; 
+        }
+        .disclaimer { 
+            font-size: 0.8em; 
+            color: #7f8c8d; 
+            text-align: center; 
+            margin-top: 20px; 
+        }
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin-top: 10px; 
+            background-color: #fff; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        th, td { 
+            border: 1px solid #ecf0f1; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #3498db; 
+            color: #fff; 
+        }
+        tr:nth-child(even) { 
+            background-color: #f9f9f9; 
+        }
+        td input[type="checkbox"] { 
+            margin: 0; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 10px; 
+            font-weight: bold; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulateur de Salaire (France 2025 - Illustratif)</h1>
+    <p>Entrez votre salaire net pour voir le brut et le super-brut. Décochez les programmes pour simuler leur suppression et voir l'augmentation du net.</p>
+    
+    <label>Salaire Net (€) : <input type="number" id="netInput" value="2000"></label>
+    
+    <h2>Programmes Sociaux (tous cochés par défaut)</h2>
+    <table id="programsTable">
+        <thead>
+            <tr>
+                <th>Sélection</th>
+                <th>Programme</th>
+                <th>Charge Employé (%)</th>
+                <th>Charge Employeur (%)</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody id="programsList"></tbody>
+    </table>
+    
+    <div id="outputs">
+        <p>Brut Actuel : <span id="gross">0</span> €</p>
+        <p>Super-Brut Actuel (Coût Total Employeur) : <span id="superGross">0</span> €</p>
+        <p>Net Ajusté (avec programmes sélectionnés) : <span id="adjustedNet">0</span> €</p>
+        <p>Augmentation du Net : <span id="increase">0</span> €</p>
+    </div>
+    
+    <p class="disclaimer">Ceci est une estimation basée sur les taux 2025 à des fins illustratives uniquement. Pas un conseil financier. Taux approximés à partir de sources comme URSSAF et autres. Consultez des professionnels pour des calculs précis.</p>
+    
+    <h2>Détails des Calculs</h2>
+    <p>Le salaire brut est calculé comme suit : brut = net / (1 - taux_employé_total)</p>
+    <p>Le super-brut est calculé comme suit : super_brut = brut * (1 + taux_employeur_total)</p>
+    <p>Pour l'ajustement (en supposant que le coût total de l'employeur reste fixe) : brut_ajusté = super_brut / (1 + taux_employeur_effectif), net_ajusté = brut_ajusté * (1 - taux_employé_effectif)</p>
+    <p>Note : Les calculs sont simplifiés et n'intègrent pas les tranches ou réductions spécifiques (ex. réduction Fillon). Ils utilisent des taux moyens pour un salarié standard.</p>
+    
+    <h3>Sources</h3>
+    <ul>
+        <li><a href="https://www.urssaf.fr/portail/home/taux-et-baremes/taux-de-cotisations/les-taux-de-cotisations-et-cont.html" target="_blank">URSSAF - Taux de cotisations</a></li>
+        <li><a href="https://www.legisocial.fr/reperes-sociaux/taux-cotisations-sociales-urssaf-2025.html" target="_blank">LegiSocial - Taux cotisations sociales URSSAF 2025</a></li>
+        <li><a href="https://www.cci.fr/actualites/les-charges-sociales-au-1er-janvier-2025" target="_blank">CCI - Charges sociales au 1er janvier 2025</a></li>
+        <li><a href="https://entreprendre.service-public.gouv.fr/actualites/A17990" target="_blank">Service-Public.fr - Cotisations sociales 2025</a></li>
+    </ul>
+    
+    <script>
+        // Données basées sur les taux 2025 de sources comme URSSAF, LegiSocial, CCI
+        // Taux en fractions (ex. 0.13 = 13%)
+        // Totaux approx. emp ~0.23, empr ~0.42 (ajustés pour 2025 : chômage à 4%, AGS 0.25%)
+        const programs = [
+            { name: "Santé (CSS, assurance maladie)", emp: 0.03, empr: 0.13, desc: "Couverture santé incluant la protection universelle" },
+            { name: "Retraite (pensions et vieillesse)", emp: 0.113, empr: 0.168, desc: "Assurance retraite et vieillesse" },
+            { name: "Allocations familiales", emp: 0.0, empr: 0.0525, desc: "Allocations familiales" },
+            { name: "Chômage (assurance chômage et AGS)", emp: 0.0, empr: 0.0425, desc: "Assurance chômage (4% + 0.25% AGS)" },
+            { name: "RSA (revenu de solidarité active)", emp: 0.03, empr: 0.0, desc: "Soutien au revenu minimum" },
+            { name: "HLM (logement social)", emp: 0.0, empr: 0.0045, desc: "Contributions au logement social" },
+            { name: "Formation professionnelle", emp: 0.0, empr: 0.0055, desc: "Formation professionnelle" },
+            { name: "Apprentissage (taxe)", emp: 0.0, empr: 0.0068, desc: "Taxe d'apprentissage" },
+            { name: "Autres sociaux (CSG restant, CSA, etc.)", emp: 0.037, empr: 0.00416, desc: "Autres contributions sociales" }
+        ];
+
+        // Calcul des taux complets
+        const fullEmpRate = programs.reduce((sum, p) => sum + p.emp, 0);
+        const fullEmprRate = programs.reduce((sum, p) => sum + p.empr, 0);
+
+        // Fonction pour obtenir les taux sélectionnés
+        function getSelectedRates() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            let emp = 0, empr = 0;
+            checkboxes.forEach((cb, index) => {
+                if (cb.checked) {
+                    emp += programs[index].emp;
+                    empr += programs[index].empr;
+                }
+            });
+            return { emp, empr };
+        }
+
+        // Mise à jour des calculs
+        function update() {
+            const net = parseFloat(document.getElementById('netInput').value) || 0;
+            if (net <= 0) return;
+
+            // Calcul du brut et super-brut actuels avec taux complets
+            const gross = net / (1 - fullEmpRate);
+            const superGross = gross * (1 + fullEmprRate);
+
+            // Obtenir les taux sélectionnés (cochés)
+            const { emp: effectiveEmp, empr: effectiveEmpr } = getSelectedRates();
+
+            // Brut ajusté en supposant super-brut fixe
+            const adjustedGross = superGross / (1 + effectiveEmpr);
+            const adjustedNet = adjustedGross * (1 - effectiveEmp);
+
+            // Augmentation
+            const increase = adjustedNet - net;
+
+            // Mise à jour de l'UI
+            document.getElementById('gross').textContent = gross.toFixed(2);
+            document.getElementById('superGross').textContent = superGross.toFixed(2);
+            document.getElementById('adjustedNet').textContent = adjustedNet.toFixed(2);
+            document.getElementById('increase').textContent = increase.toFixed(2);
+        }
+
+        // Construction de la liste des programmes dans le tableau
+        const tbody = document.getElementById('programsList');
+        programs.forEach((p, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="checkbox" checked></td>
+                <td>${p.name}</td>
+                <td>${(p.emp * 100).toFixed(2)}%</td>
+                <td>${(p.empr * 100).toFixed(2)}%</td>
+                <td>${p.desc}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Écouteurs d'événements
+        document.getElementById('netInput').addEventListener('input', update);
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', update));
+
+        // Mise à jour initiale
+        update();
+    </script>
+</body>
+</html>
